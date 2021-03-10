@@ -1,84 +1,73 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
 import { Todo } from './models/todo';
 import { v4 as uuidv4 } from 'uuid';
 import { TodoStatusEnum } from './enums/TodoStatusEnum';
+import { addTODO } from './DTO/addTODO';
+import { patchTODO } from './DTO/patchTODO';
+import { todoService } from 'src/todoService/todoService.service';
 
 
 @Controller('todo')
 export class TodoController {
 
-    todos: Todo [] = [];
-    @Get('')
-    getTodos() : Todo[] {
-      return this.todos;
-    }
+  constructor(private todoService: todoService) {
+  }
 
-    @Post()
-    addTodo(
-     @Body() todoData
-    ): Todo {
-      console.log(todoData);
-      const {name, description} = todoData;
-    
-      const todo = new Todo();
-      todo.description = description;
-      todo.name = name;
-      todo.date = new Date();
-      todo.status = TodoStatusEnum.waiting;
-      todo.id = uuidv4();
-      this.todos.push(todo);
-      return todo;
-    }
+  todos: Todo [] = []; // creation objet todos de type tableau destodo qui est vide au départ
 
-    @Get(':id')
+  @Get('')
+  getTodos(@Req() req:Request ): Todo[] {
+    console.log(req);
+    return this.todos;
+  }
+  @Post('Newtodo')
+  addTodo(
+    @Body() todoData: addTODO
+  ): Todo {
+
+    return this.todoService.addTodo(todoData);
+  }
+  @Get(':id')
   getTodoById(
     @Param('id') id: string  
   ): Todo   {
    return  this.todos.find(
        (todo : Todo) => todo.id === id);
   }
-  
-
   @Delete('delete/:id')
-  DeletById(
-    @Param('id') id:string)
-    : String {
+  DeletTodoById(
+    @Param('id') id:string): String {
     const todo = this.todos.find((todo: Todo) => todo.id === id);
-    const todoId = this.todos.findIndex((todo: Todo) => todo.id === id);
-    if (todoId > 0) {
-      this.todos.splice(todoId, 1);
-      return 'le todo a ete supprimer avec succée ';
+    const todoIndex = this.todos.findIndex((todo: Todo) => todo.id === id);
+    if (todoIndex > 0) {
+      this.todos.splice(todoIndex, 1);
+      return 'suppression valide ';
     } else {
-      return  "le todo n existe pas";
+      return  "todo n'existe pas";
     }
+
   }
-
-  @Put('update/:id')
-  ModifierTodo(@Param('id') id, 
-  @Body() todoData)
-  : Todo{
+  @Patch('update/:id')
+  ModifierTodo(@Param('id') id, @Body() todoData : Partial<patchTODO>): Todo{
     const todo = this.todos.find((todo : Todo) => todo.id === id);
-
-    const {name, description,date} = todoData;
-    
-      todo.name = name;
-      todo.description=description;
-    
+    if(todo != todoData){
+      todo.name = todoData.name;
+      todo.description=todoData.description;
+    }
     return todo;
 
   }
-  
 
-  @Patch('updatePartie/:id')
-  ModifierPartieTodo(@Param('id') id, @Body() todoData: Partial<Todo>) : Todo{
- 
+
+  @Put('updatePartie/:id')
+  ModifierPartieTodo(@Param('id') id, @Body() todoData:Partial<Todo>) : Todo{
+    
     const todo = this.todos.find((todo : Todo) => todo.id === id);
-    const {name, description,date} = todoData;
-    if (todo.name != name){
-       todo.name=name;
+    if (todo.name != todoData.name){
+       todo.name=todoData.name;
     }
-    if (todo.description != description){
-      todo.description = description;
+    if (todo.description != todoData.description){
+      todo.description = todoData.description;
     }
    return todo;
   }
