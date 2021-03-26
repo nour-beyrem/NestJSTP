@@ -1,74 +1,72 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import { Todo } from './models/todo';
 import { v4 as uuidv4 } from 'uuid';
 import { TodoStatusEnum } from './enums/TodoStatusEnum';
-import { addTODO } from './DTO/addTODO';
-import { patchTODO } from './DTO/patchTODO';
-import { todoService } from 'src/todoService/todoService.service';
+
+
+
+import { AddTodoDto } from './DTO/addTODO';
+import { TodoService } from 'src/todoService/todoService.service';
+import { UpdateTodoDto } from './DTO/updateTODO';
+import { ProcessTodoPipe } from './process-todo.pipe';
 
 
 @Controller('todo')
 export class TodoController {
 
-  constructor(private todoService: todoService) {
+  constructor(private todoService: TodoService) {
   }
 
   todos: Todo [] = []; // creation objet todos de type tableau destodo qui est vide au départ
 
+  
   @Get('')
-  getTodos(@Req() req:Request ): Todo[] {
-    console.log(req);
-    return this.todos;
+  getTodos(
+    @Query('page', new DefaultValuePipe(1)) page: number,
+    @Query('nbre', new DefaultValuePipe(10)) nbre: number,
+  ): Todo[] {
+    console.log('page', page);
+    console.log('nbre', nbre);
+    return this.todoService.getTodos();
   }
-  @Post('Newtodo')
+  
+  @Post()
   addTodo(
-    @Body() todoData: addTODO
+    @Body(ProcessTodoPipe) todoData: AddTodoDto
   ): Todo {
-
     return this.todoService.addTodo(todoData);
   }
+
   @Get(':id')
   getTodoById(
-    @Param('id') id: string  
-  ): Todo   {
-   return  this.todos.find(
-       (todo : Todo) => todo.id === id);
-  }
-  @Delete('delete/:id')
-  DeletTodoById(
-    @Param('id') id:string): String {
-    const todo = this.todos.find((todo: Todo) => todo.id === id);
-    const todoIndex = this.todos.findIndex((todo: Todo) => todo.id === id);
-    if (todoIndex > 0) {
-      this.todos.splice(todoIndex, 1);
-      return 'suppression valide ';
-    } else {
-      return  "todo n'existe pas";
-    }
-
-  }
-  @Patch('update/:id')
-  ModifierTodo(@Param('id') id, @Body() todoData : Partial<patchTODO>): Todo{
-    const todo = this.todos.find((todo : Todo) => todo.id === id);
-    if(todo != todoData){
-      todo.name = todoData.name;
-      todo.description=todoData.description;
-    }
-    return todo;
-
+    @Param('id') id: string
+  ): Todo {
+    return this.todoService.getTodoById(id);
   }
 
-
-  @Put('updatePartie/:id')
-  ModifierPartieTodo(@Param('id') id, @Body() todoData:Partial<Todo>) : Todo{
-    
-    const todo = this.todos.find((todo : Todo) => todo.id === id);
-    if (todo.name != todoData.name){
-       todo.name=todoData.name;
-    }
-    if (todo.description != todoData.description){
-      todo.description = todoData.description;
-    }
-   return todo;
+  @Delete(':id')
+  deleteTodo(
+    @Param('id') id: string
+  ): { message: string } {
+    return this.todoService.deleteTodo(id);
   }
+
+  @Put(':id')
+  updateTodo(
+    @Param('id')id : string,
+    @Body() newTodo: UpdateTodoDto
+  ): Todo {
+    return this.todoService.putTodo(id, newTodo);
+  }
+  @Patch(':id')
+  patchTodo(
+    @Param('id')id : string,
+    @Body() newTodo: Partial<UpdateTodoDto>
+  ): Todo {
+    return this.todoService.patchTodo(id, newTodo);
+  }
+
+  
+
+
 }

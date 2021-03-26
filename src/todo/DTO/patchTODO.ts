@@ -1,32 +1,32 @@
-import { IsNotEmpty, MaxLength, MinLength } from 'class-validator';
-import { errorMessage } from '../todoMessage/errorMessage';
 
+import { IsIn, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { ErrorMessgaes } from 'src/generics/error-message.common';
 
-export  class patchTODO{
-  @IsNotEmpty({
-    message: errorMessage.isEmptyMessage
-    }
+import { TodoStatusEnum } from '../enums/TodoStatusEnum';
 
-  )
-
-  @MinLength(5,{
-    message: errorMessage.MinLengthMessage
-    }
-  )
-  @MaxLength(20, {
-      message: errorMessage.MaxLengthMessage
-    }
-    )
-  name: string;
-  @IsNotEmpty(
-    {
-      message: errorMessage.isEmptyMessage
-    }
-  )
-  @MaxLength(20, {
-    message: errorMessage.MaxLengthMessage
-    }
-  )
+export class PatchTodoDto {
+  @IsOptional()
+  @MinLength(3, {
+    message: ErrorMessgaes.tooShort
+  })
+  @MaxLength(10, {
+    message: ErrorMessgaes.tooLong
+  })
+    name: string;
+  @IsOptional()
+  @MinLength(10, {
+    message: ErrorMessgaes.tooShort
+  })
   description: string;
-  
+  @IsOptional()
+  @IsIn([
+    TodoStatusEnum.waiting,
+    TodoStatusEnum.actif,
+    TodoStatusEnum.done,
+  ])
+  status: TodoStatusEnum;
 }
+
+
+
+
