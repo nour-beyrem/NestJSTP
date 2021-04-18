@@ -9,6 +9,8 @@ import { AddTodoDto } from './DTO/addTODO';
 import { TodoService } from 'src/todoService/todoService.service';
 import { UpdateTodoDto } from './DTO/updateTODO';
 import { ProcessTodoPipe } from './process-todo.pipe';
+import { todoEntity } from './entities/todo.entity';
+import { PatchTodoDto } from './DTO/patchTODO';
 
 
 @Controller('todo')
@@ -33,7 +35,7 @@ export class TodoController {
   @Post()
   addTodo(
     @Body(ProcessTodoPipe) todoData: AddTodoDto
-  ): Todo {
+  ): Promise<todoEntity>{
     return this.todoService.addTodo(todoData);
   }
 
@@ -47,15 +49,21 @@ export class TodoController {
   @Delete(':id')
   deleteTodo(
     @Param('id') id: string
-  ): { message: string } {
+  ): Promise<unknown> {
     return this.todoService.deleteTodo(id);
   }
 
+  @Delete('criteria')
+  deleteTodoByCriteria(
+    @Body('id') criterias: PatchTodoDto
+  ): Promise<unknown> {
+    return this.todoService.deleteTodoByCreterias(criterias);
+  }
   @Put(':id')
   updateTodo(
     @Param('id')id : string,
-    @Body() newTodo: UpdateTodoDto
-  ): Todo {
+    @Body() newTodo: PatchTodoDto
+  ): Promise<todoEntity> {
     return this.todoService.putTodo(id, newTodo);
   }
   @Patch(':id')
